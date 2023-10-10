@@ -1,0 +1,12 @@
+2023/10/11-05:26:54.151 cbd0 Reusing MANIFEST /home/moonap/Desktop/wabotv2/cookieSessions/session-wabotv2/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2023/10/11-05:26:54.152 cbd0 Recovering log #270
+2023/10/11-05:26:54.305 cbd0 Reusing old log /home/moonap/Desktop/wabotv2/cookieSessions/session-wabotv2/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/000270.log 
+2023/10/11-05:27:50.531 cbce Level-0 table #275: started
+2023/10/11-05:27:50.568 cbce Level-0 table #275: 1680649 bytes OK
+2023/10/11-05:27:50.571 cbce Delete type=0 #270
+2023/10/11-05:27:52.991 cbcb Compacting 1@1 + 1@2 files
+2023/10/11-05:27:53.069 cbcb Generated table #276@1: 42467 keys, 2044646 bytes
+2023/10/11-05:27:53.069 cbcb Compacted 1@1 + 1@2 files => 2044646 bytes
+2023/10/11-05:27:53.070 cbcb compacted to: files[ 0 0 1 0 0 0 0 ]
+2023/10/11-05:27:53.071 cbcb Delete type=2 #272
+2023/10/11-05:27:53.071 cbcb Delete type=2 #275
