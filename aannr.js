@@ -1,17 +1,11 @@
-const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js')
+const { Client, LocalAuth, } = require('whatsapp-web.js')
 const ffmpeg = require('@ffmpeg-installer/ffmpeg');
-const fetch = require("node-fetch");
 const chalk = require("chalk");
-const inquirer = require("inquirer");
-const fs = require("fs");
 const puppeteer = require("puppeteer");
-const { exit } = require("process");
-const { resolve } = require("path");
-const { reject } = require("lodash");
-const {Headers} = require('node-fetch');
-const readline = require('readline');
-
+const { getRedirectURL, getIdVideo, getVideoNoWM, downloadMediaFromList } = require('./features/tiktok-function');
+const { aboutClient, generateIDSticker } = require('./features/whatsapp-function');
 const Spinnies = require('spinnies')
+
 
 const spinnies = new Spinnies();
 const ffmpegPath = ffmpeg.path;
@@ -27,13 +21,8 @@ const client = new Client({
     }
 });
 
-const headers = new Headers();
-headers.append('User-Agent', 'TikTok 26.2.0 rv:262018 (iPhone; iOS 14.4.2; en_US) Cronet');
-const headersWm = new Headers();
-headersWm.append('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36');
-
-
 var qrcode = require('qrcode-terminal');
+
 client.initialize();
 
 spinnies.add("Loading", { text: "Opening WhatsApp Web..." });
@@ -80,6 +69,10 @@ client.on("message", async (msg) => {
             }
         } else if (msg.body.startsWith("!tiktok ")) {
             const linkTiktokURL = msg.body.split(" ")[1];
+            if (!linkTiktokURL){
+                msg.reply("_Error: Please provide a link. Ex: '!tiktok https: https://vt.tiktok.com/example/'_")
+                return;
+            }
             const redirectURL = await getRedirectURL(linkTiktokURL);
             msg.reply("_Downloading on process..._")
             if (redirectURL) {
@@ -104,107 +97,17 @@ client.on("message", async (msg) => {
                     return;
                 }
             }
+        } else if (msg.body.startsWith("!instagram ")) {
+            const linkInstagramURL = msg.body.split(" ")[1];
+            if (!linkInstagramURL){
+                msg.reply("_Error: please provide a link. Ex: '!instagram https://www.instagram.com/(p/reel/tv)/example/'_");
+                return;
+            }
+            
+            
         }
     } catch (err) {
         console.log(chalk.red(err))
         return;
     }
 })
-
-function aboutClient(client){
-    console.log(chalk.cyan(                                                                                                                                                  
-        '\nAbout Client :' +                                                                                                                                     
-        '\n  - Username : ' + client.info.pushname +                                                                                                           
-        '\n  - Phone    : ' + client.info.wid.user +                                                                                                       
-        '\n  - Platform : ' + client.info.platform + '\n'
-    ));
-};
-
-function generateIDSticker(length) {
-    const char = "abcdefghijklmnopqrstuvwxyz0123456789";
-    let result = ''
-
-    for (let i = 0; i < length; i++){
-        const randomIndex = Math.floor(Math.random() * char.length);
-        result += char.charAt(randomIndex);
-    }
-
-    return result;
-}
-
-const getRedirectURL = async (url, msg) => {
-    if (url.includes("vm.tiktok.com") || url.includes("vt.tiktok.com")) {
-        const response = await fetch(url, {
-            redirect: "follow",
-            follow: 10,
-        });
-        return response.url; // Return the final redirected URL
-    }
-    return url;
-}
-
-
-const getVideoNoWM = async (url, msg) => {
-    const idVideo = await getIdVideo(url, msg)
-    const API_URL = `https://api16-normal-c-useast1a.tiktokv.com/aweme/v1/feed/?aweme_id=${idVideo}`;
-    const request = await fetch(API_URL, {
-        method: "GET",
-        headers : headers
-    });
-    const body = await request.text();
-        try {
-            var res = JSON.parse(body);
-        } catch (err) {
-            console.error("Error:", err);
-            console.error("Response body:", body);
-        }
-        const urlMedia = res.aweme_list[0].video.play_addr.url_list[0]
-        const data = {
-            url: urlMedia,
-            id: idVideo
-        }
-        return data
-}
-
-const getIdVideo = (url, msg) => {
-    const matching = url.includes("/video/");
-    if(!matching) {
-        throw new Error("URL not found");
-    }
-    const idVideo = url.substring(url.indexOf("/video/") + 7, url.length);
-    return idVideo.length > 19 ? idVideo.substring(0, idVideo.indexOf("?")) : idVideo;
-};
-
-const downloadMediaFromList = async (list, chat, msg) => {
-    const folder = "downloads/";
-
-    const sendMediaPromises = list.map((item) => {
-        const fileName = `${item.id}.mp4`;
-        const downloadFile = fetch(item.url);
-        return new Promise(async (resolve, reject) => {
-            downloadFile
-                .then((res) => {
-                    const file = fs.createWriteStream(folder + fileName);
-                    res.body.pipe(file);
-                    file.on("finish", () => {
-                        file.close();
-                        msg.reply("_Downloaded Successfully_")
-                        const media = MessageMedia.fromFilePath(`${folder}${fileName}`);
-                        chat.sendMessage(media, {
-                            sendMediaAsDocument: true,
-                            caption: "Enjoy your video :)"
-                        });
-
-                        resolve();
-                    });
-                    file.on("error", (err) => reject(err));
-                })
-                .catch(reject);
-        });
-    });
-    try {
-        await Promise.all(sendMediaPromises);
-    } catch (err) {
-        console.error("[X] Error: " + err);
-    }
-};
