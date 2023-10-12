@@ -17,7 +17,6 @@ const client = new Client({
     ffmpegPath,
     puppeteer: {
         args: ['--no-sandbox'],
-        headless: false,
     }
 });
 
