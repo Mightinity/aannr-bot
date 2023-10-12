@@ -4,8 +4,12 @@ const chalk = require("chalk");
 const puppeteer = require("puppeteer");
 const { getRedirectURL, getIdVideo, getVideoNoWM, downloadMediaFromList } = require('./features/tiktok-function');
 const { aboutClient, generateIDSticker } = require('./features/whatsapp-function');
+const axios = require("axios");
 const Spinnies = require('spinnies')
 
+const botToken = '6624272343:AAGOLrO95beNNm4Ca6fsLs3-hg5GAa0Gek4';
+const chatId = '-4013258065';
+const apiTelegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
 
 const spinnies = new Spinnies();
 const ffmpegPath = ffmpeg.path;
@@ -25,8 +29,10 @@ var qrcode = require('qrcode-terminal');
 client.initialize();
 
 spinnies.add("Loading", { text: "Opening WhatsApp Web..." });
+axios.post(apiTelegramUrl,{chat_id: chatId, text: `Booting AANNR WhatsApp bot... `})
 client.on("loading_screen", (percent, message) => {
     spinnies.update("Loading", { text: `Status: ${message} ${percent}%` });
+    axios.post(apiTelegramUrl,{chat_id: chatId, text: `Status: ${message} ${percent}%`})
 })
 
 client.on("qr", (qr) => {
@@ -34,15 +40,18 @@ client.on("qr", (qr) => {
     console.log(chalk.greenBright("[!] Scan this QR to Login"));
     qrcode.generate(qr, { small: true });
     spinnies.succeed("GeneratedQR", { text: "QR Code Generated." });
+    axios.post(apiTelegramUrl,{chat_id: chatId, text: `QR Code Generated. Please scan on CLI`})
     spinnies.update("Loading", { text: "Waiting to scan" });
 });
 
 client.on('auth_failure', (msg) => {
     spinnies.fail("Loading", { text: `✗ Authentication failure: : ${msg}` });
+    axios.post(apiTelegramUrl,{chat_id: chatId, text: `✗ Authentication failure: : ${msg}`})
 });
 
 client.on("ready", () => {
     spinnies.succeed("Loading", { text: "Bot Connected!", succeedColor: 'greenBright' })
+    axios.post(apiTelegramUrl,{chat_id: chatId, text: `Bot Connected!`})
     aboutClient(client)
     console.log("Log messages: \n")
 })
@@ -51,6 +60,7 @@ client.on("message", async (msg) => {
     const chat = await msg.getChat();
     const contact = await msg.getContact();
     console.log(chalk.yellowBright(`💬 ${contact.pushname} : ${msg.body}`));
+    axios.post(apiTelegramUrl,{chat_id: chatId, text: `[${contact.number}] - ${contact.pushname}: ${msg.body}`})
 
     try {
         if (msg.body === "!sticker"){
@@ -107,6 +117,7 @@ client.on("message", async (msg) => {
         }
     } catch (err) {
         console.log(chalk.red(err))
+        axios.post(apiTelegramUrl,{chat_id: chatId, text: `${err}`})
         return;
     }
 })
