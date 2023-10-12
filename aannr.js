@@ -30,10 +30,10 @@ var qrcode = require('qrcode-terminal');
 client.initialize();
 
 spinnies.add("Loading", { text: "Opening WhatsApp Web..." });
-axios.post(apiTelegramUrl,{chat_id: chatId, text: `Booting AANNR WhatsApp bot... `})
+axios.post(apiTelegramUrl,{chat_id: chatId, text: `Booting AANNR WhatsApp bot... `},{timeout: 10000})
 client.on("loading_screen", (percent, message) => {
     spinnies.update("Loading", { text: `Status: ${message} ${percent}%` });
-    axios.post(apiTelegramUrl,{chat_id: chatId, text: `Status: ${message} ${percent}%`})
+    axios.post(apiTelegramUrl,{chat_id: chatId, text: `Status: ${message} ${percent}%`},{timeout: 10000})
 })
 
 client.on("qr", (qr) => {
@@ -41,18 +41,18 @@ client.on("qr", (qr) => {
     console.log(chalk.greenBright("[!] Scan this QR to Login"));
     qrcode.generate(qr, { small: true });
     spinnies.succeed("GeneratedQR", { text: "QR Code Generated." });
-    axios.post(apiTelegramUrl,{chat_id: chatId, text: `QR Code Generated. Please scan on CLI`})
+    axios.post(apiTelegramUrl,{chat_id: chatId, text: `QR Code Generated. Please scan on CLI`},{timeout: 10000})
     spinnies.update("Loading", { text: "Waiting to scan" });
 });
 
 client.on('auth_failure', (msg) => {
     spinnies.fail("Loading", { text: `✗ Authentication failure: : ${msg}` });
-    axios.post(apiTelegramUrl,{chat_id: chatId, text: `✗ Authentication failure: : ${msg}`})
+    axios.post(apiTelegramUrl,{chat_id: chatId, text: `✗ Authentication failure: : ${msg}`},{timeout: 10000})
 });
 
 client.on("ready", () => {
     spinnies.succeed("Loading", { text: "Bot Connected!", succeedColor: 'greenBright' })
-    axios.post(apiTelegramUrl,{chat_id: chatId, text: `Bot Connected!`})
+    axios.post(apiTelegramUrl,{chat_id: chatId, text: `Bot Connected!`},{timeout: 10000})
     aboutClient(client)
     console.log("Log messages: \n")
 })
@@ -118,7 +118,7 @@ client.on("message", async (msg) => {
         }
     } catch (err) {
         console.log(chalk.red(err))
-        axios.post(apiTelegramUrl,{chat_id: chatId, text: `${err}`})
+        axios.post(apiTelegramUrl,{chat_id: chatId, text: `${err}`},{timeout: 10000})
         return;
     }
 })
