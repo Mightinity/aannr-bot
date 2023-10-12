@@ -3,7 +3,8 @@ const ffmpeg = require('@ffmpeg-installer/ffmpeg');
 const chalk = require("chalk");
 const puppeteer = require("puppeteer");
 const { getRedirectURL, getIdVideo, getVideoNoWM, downloadMediaFromList } = require('./features/tiktok-function');
-const { aboutClient, generateIDSticker } = require('./features/whatsapp-function');
+const { aboutClient } = require('./features/whatsapp-function');
+const { generateID } = require('./features/generateID');
 const axios = require("axios");
 const Spinnies = require('spinnies')
 
@@ -60,13 +61,13 @@ client.on("message", async (msg) => {
     const chat = await msg.getChat();
     const contact = await msg.getContact();
     console.log(chalk.yellowBright(`💬 ${contact.pushname} : ${msg.body}`));
-    axios.post(apiTelegramUrl,{chat_id: chatId, text: `[${contact.number}] - ${contact.pushname}: ${msg.body}`})
+    axios.post(apiTelegramUrl,{chat_id: chatId, text: `💬 [${contact.number}] - ${contact.pushname}: ${msg.body}`})
 
     try {
         if (msg.body === "!sticker"){
             if(msg.hasMedia){
                 const media = await msg.downloadMedia();
-                const idSticker = await generateIDSticker(9);
+                const idSticker = await generateID(9);
                 chat.sendMessage(media, {
                     sendMediaAsSticker: true,
                     stickerName: `${contact.pushname}-[${idSticker}]`,
@@ -94,7 +95,7 @@ client.on("message", async (msg) => {
             
                     const listVideo = [data]; // Put the data into an array for easier processing
             
-                    downloadMediaFromList(listVideo, chat, msg).then(() => {
+                    downloadMediaFromList(listVideo, chat, msg, contact).then(() => {
                         console.log(chalk.green("[+] Downloaded successfully."));
                         msg.reply("_Uploading a video..._")
                     }).catch(err => {

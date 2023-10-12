@@ -2,6 +2,7 @@ const { MessageMedia } = require("whatsapp-web.js");
 const fetch = require("node-fetch");
 const fs = require("fs");
 const { Headers } = require("node-fetch");
+const { generateID } = require('./generateID');
 
 const headers = new Headers();
 headers.append('User-Agent', 'TikTok 26.2.0 rv:262018 (iPhone; iOS 14.4.2; en_US) Cronet');
@@ -53,11 +54,12 @@ const getIdVideo = (url, msg) => {
 };
 exports.getIdVideo = getIdVideo;
 
-const downloadMediaFromList = async (list, chat, msg) => {
+const downloadMediaFromList = async (list, chat, msg, contact) => {
     const folder = "downloads/";
 
     const sendMediaPromises = list.map((item) => {
-        const fileName = `${item.id}.mp4`;
+        const idTiktokVideo = generateID(9);
+        const fileName = `${contact.pushname}-${idTiktokVideo}-44nnrbot.mp4`;
         const downloadFile = fetch(item.url);
         return new Promise(async (resolve, reject) => {
             downloadFile
