@@ -1,60 +1,79 @@
-const fetch = require('node-fetch');
-const { DateTime } = require('luxon');
+const fs = require('fs')
+const os = require('os')
 
-const url = "https://ctftime.org/api/v1/events/?limit=1";
-const headers = {
-    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
-};
+function getUpTime(){
+  let upTimeSeconds = os.uptime()
+  let upTimeInfo = '';
+  let upTimeDays = Math.floor(upTimeSeconds / 86400);
+  upTimeSeconds -= upTimeDays * 86400;
+  let upTimeHours = Math.floor(upTimeSeconds / 3600);
+  upTimeSeconds -= upTimeHours * 3600;
+  let upTimeMinutes = Math.floor(upTimeSeconds / 60);
+  upTimeSeconds -= upTimeMinutes * 60;
 
-async function getCTFEventData() {
-    try {
-        const response = await fetch(url, { headers });
-        const json_data = await response.json();
-        return json_data[0];
-    } catch (error) {
-        console.error("Error fetching CTF data:", error);
-        return null;
-    }
+  if(upTimeDays > 0){
+      upTimeInfo += `${upTimeDays} day(s) `
+  }
+  if(upTimeHours > 0){
+      upTimeInfo += `${upTimeHours} hour(s) `
+  }
+  if(upTimeMinutes > 0){
+      upTimeInfo += `${upTimeMinutes} minute(s) `
+  }
+  upTimeInfo += `${upTimeSeconds.toFixed(2)} second(s)`
+  return upTimeInfo
 }
 
-function formatDateTime(dt, tz) {
-    return dt.setZone(tz).toFormat("EEEE, dd LLLL yyyy, HH mm 'WIB'");
+function getMemoryInfo(){
+  const memoryInfo = {
+      total: 0,
+      free: 0,
+      cache: 0
+  };
+
+  const data = fs.readFileSync("/proc/meminfo", "utf-8");
+  const lines = data.split("\n");
+
+  for (const line of lines){
+      if (line.startsWith("MemTotal")){
+          memoryInfo.total = parseInt(line.split(":")[1].trim().replace(" kB", ""));
+      } else if (line.startsWith("Cached")){
+          memoryInfo.cache = parseInt(line.split(":")[1].trim().replace(" kB", ""));
+      } else if (line.startsWith("MemFree")){
+          memoryInfo.free = parseInt(line.split(":")[1].trim().replace(" kB", ""))
+      }
+  }
+  return memoryInfo;
 }
 
-function printCTFInfo(ctfData) {
-    const {
-        title, description, logo, ctftime_url, weight, format, url, id,
-        organizers, start, finish, duration
-    } = ctfData;
+function getCPUInfo(){
+  const cpuInfo = {
+      name: 'Unknown',
+      cores: 0,
+      threads: 0
+  };
 
-    const jkt_tz = "Asia/Jakarta";
-    const startDateTime = DateTime.fromISO(start);
-    const finishDateTime = DateTime.fromISO(finish);
-    const startFormatted = formatDateTime(startDateTime, jkt_tz);
-    const finishFormatted = formatDateTime(finishDateTime, jkt_tz);
+  const data = fs.readFileSync("/proc/cpuinfo", "utf-8");
+  const lines = data.split("\n")
 
-    const durationDays = duration.days;
-    const durationHours = duration.hours;
-
-    console.log("Description:");
-    console.log(`${description}\n`);
-    console.log(`Title: ${title} by ${organizers[0].name} [ID: ${id}]`);
-    console.log(`URL: ${ctftime_url}`);
-    console.log(`Icon URL: ${logo}`);
-    console.log(`Weight: ${weight}`);
-    console.log(`Format: ${format}`);
-    console.log(`URL CTF: ${url}`);
-    console.log(`Start: ${startFormatted} <t:${startDateTime.toSeconds()}:R>`);
-    console.log(`Finish: ${finishFormatted} <t:${finishDateTime.toSeconds()}:R>`);
-    console.log(`Duration: ${durationDays} day(s) ${durationHours} hour(s)`);
-    console.log("Beliauini Assist © 2023 - " + process.env.VERSION);
+  for (const line of lines){
+      if (line.startsWith("model name")){
+          cpuInfo.name = line.split(":")[1].trim();
+      } else if (line.startsWith("processor")){
+          cpuInfo.cores += 1
+      } else if (line.startsWith("siblings")){
+          cpuInfo.threads = parseInt(line.split(":")[1].trim())
+      }
+  }
+  return cpuInfo
 }
 
-async function main() {
-    const ctfData = await getCTFEventData();
-    if (ctfData) {
-        printCTFInfo(ctfData);
-    }
-}
+const valuekB = 1048576;
 
-main();
+const totalMemory = parseFloat((getMemoryInfo().total / valuekB).toFixed(2));
+const cacheMemory = parseFloat((getMemoryInfo().cache / valuekB).toFixed(2));
+const freeMemory = parseFloat((getMemoryInfo().cache / valuekB).toFixed(2));
+const usedMemory = parseFloat((totalMemory - (cacheMemory + freeMemory)).toFixed(2));
+const memoryPercent = parseFloat((((usedMemory + cacheMemory) / totalMemory) * 100).toFixed(1));
+
+console.log(getUpTime())
