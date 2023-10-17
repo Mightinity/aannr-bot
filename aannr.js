@@ -15,7 +15,7 @@ require('dotenv').config()
 
 const botToken = process.env.TELEGRAM_TOKEN;
 const chatId = process.env.TELEGRAM_CHATID;
-const botTelegram = new TelegramBot(botToken, { polling: true });
+const botTelegram = new TelegramBot(botToken, { polling: false });
 
 const spinnies = new Spinnies();
 const ffmpegPath = ffmpeg.path;
@@ -35,10 +35,12 @@ var qrcode = require('qrcode-terminal');
 client.initialize();
 
 spinnies.add("Loading", { text: "Opening WhatsApp Web..." });
-botTelegram.sendMessage(chatId, "Booting AANNR WhatsApp bot... ")
+// botTelegram.sendMessage(chatId, "Booting AANNR WhatsApp bot... ");
+if (process.env.LOG_TELEGRAM_ENABLE === "TRUE") botTelegram.sendMessage(chatId, "Booting AANNR WhatsApp bot..."); else console.log(chalk.greenBright("Booting AANNR WhatsApp bot..."));
 client.on("loading_screen", (percent, message) => {
     spinnies.update("Loading", { text: `Status: ${message} ${percent}%` });
-    botTelegram.sendMessage(chatId, `Status: ${message} ${percent}%`)
+    // botTelegram.sendMessage(chatId, `Status: ${message} ${percent}%`)
+    if (process.env.LOG_TELEGRAM_ENABLE === "TRUE") botTelegram.sendMessage(chatId, `Status: ${message} ${percent}%`);
 })
 
 client.on("qr", (qr) => {
@@ -46,18 +48,21 @@ client.on("qr", (qr) => {
     console.log(chalk.greenBright("[!] Scan this QR to Login"));
     qrcode.generate(qr, { small: true });
     spinnies.succeed("GeneratedQR", { text: "QR Code Generated." });
-    botTelegram.sendMessage(chatId, `QR Code Generated. Please scan on CLI`)
+    // botTelegram.sendMessage(chatId, `QR Code Generated. Please scan on CLI`)
+    if (process.env.LOG_TELEGRAM_ENABLE === "TRUE") botTelegram.sendMessage(chatId, `QR Code Generated. Please scan on CLI`);
     spinnies.update("Loading", { text: "Waiting to scan" });
 });
 
 client.on('auth_failure', (msg) => {
     spinnies.fail("Loading", { text: `✗ Authentication failure: : ${msg}` });
-    botTelegram.sendMessage(chatId, `✗ Authentication failure: : ${msg}`);
+    // botTelegram.sendMessage(chatId, `✗ Authentication failure: : ${msg}`);
+    if (process.env.LOG_TELEGRAM_ENABLE === "TRUE") botTelegram.sendMessage(chatId, `✗ Authentication failure: : ${msg}`);
 });
 
 client.on("ready", () => {
-    spinnies.succeed("Loading", { text: "Bot Connected!", succeedColor: 'greenBright' })
-    botTelegram.sendMessage(chatId, `Bot Connected!`);
+    spinnies.succeed("Loading", { text: "AANNR BOT online and ready to use!", succeedColor: 'greenBright' })
+    // botTelegram.sendMessage(chatId, `Bot Connected!`);
+    if (process.env.LOG_TELEGRAM_ENABLE === "TRUE") botTelegram.sendMessage(chatId, `AANNR BOT online and ready to use!`);
     aboutClient(client)
     console.log("Log messages: \n")
 })
@@ -66,7 +71,8 @@ client.on("message", async (msg) => {
     const chat = await msg.getChat();
     const contact = await msg.getContact();
     console.log(chalk.yellowBright(`💬 ${contact.pushname} : ${msg.body}`));
-    botTelegram.sendMessage(chatId, `💬 [${contact.number}] - ${contact.pushname}: ${msg.body}`);
+    // botTelegram.sendMessage(chatId, `💬 [${contact.number}] - ${contact.pushname}: ${msg.body}`);
+    if (process.env.LOG_TELEGRAM_ENABLE === "TRUE") botTelegram.sendMessage(chatId, `💬 [${contact.number}] - ${contact.pushname}: ${msg.body}`);
 
     try {
         if (msg.body === "!sticker"){
@@ -160,7 +166,8 @@ client.on("message", async (msg) => {
         }
     } catch (err) {
         console.log(chalk.red(err))
-        botTelegram.sendMessage(chatId, `${err}`);
+        // botTelegram.sendMessage(chatId, `${err}`);
+        if (process.env.LOG_TELEGRAM_ENABLE === "TRUE") botTelegram.sendMessage(chatId, `Caught Error: ${err}`);
         return;
     }
 })

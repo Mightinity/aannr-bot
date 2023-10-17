@@ -1,13 +1,13 @@
 {
-  "name": "wabotv2",
-  "version": "1.0.0",
+  "name": "aannr-bot",
+  "version": "1.0.1",
   "description": "",
   "main": "aannr.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node ."
   },
   "author": "Bimo Yudistira Ariel",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "ansi-escapes": "^4.3.2",
