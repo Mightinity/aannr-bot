@@ -34,12 +34,11 @@ var qrcode = require('qrcode-terminal');
 
 client.initialize();
 
+const startTimeBooting = Date.now()
 spinnies.add("Loading", { text: "Opening WhatsApp Web..." });
-// botTelegram.sendMessage(chatId, "Booting AANNR WhatsApp bot... ");
 if (process.env.LOG_TELEGRAM_ENABLE === "TRUE") botTelegram.sendMessage(chatId, "Booting AANNR WhatsApp bot..."); else console.log(chalk.greenBright("Booting AANNR WhatsApp bot..."));
 client.on("loading_screen", (percent, message) => {
     spinnies.update("Loading", { text: `Status: ${message} ${percent}%` });
-    // botTelegram.sendMessage(chatId, `Status: ${message} ${percent}%`)
     if (process.env.LOG_TELEGRAM_ENABLE === "TRUE") botTelegram.sendMessage(chatId, `Status: ${message} ${percent}%`);
 })
 
@@ -48,21 +47,20 @@ client.on("qr", (qr) => {
     console.log(chalk.greenBright("[!] Scan this QR to Login"));
     qrcode.generate(qr, { small: true });
     spinnies.succeed("GeneratedQR", { text: "QR Code Generated." });
-    // botTelegram.sendMessage(chatId, `QR Code Generated. Please scan on CLI`)
     if (process.env.LOG_TELEGRAM_ENABLE === "TRUE") botTelegram.sendMessage(chatId, `QR Code Generated. Please scan on CLI`);
     spinnies.update("Loading", { text: "Waiting to scan" });
 });
 
 client.on('auth_failure', (msg) => {
     spinnies.fail("Loading", { text: `✗ Authentication failure: : ${msg}` });
-    // botTelegram.sendMessage(chatId, `✗ Authentication failure: : ${msg}`);
     if (process.env.LOG_TELEGRAM_ENABLE === "TRUE") botTelegram.sendMessage(chatId, `✗ Authentication failure: : ${msg}`);
 });
 
 client.on("ready", () => {
+    const finishTimeBooting = Date.now()
+    const elapsedTimeSeconds = (finishTimeBooting - startTimeBooting) / 1000;
     spinnies.succeed("Loading", { text: "AANNR BOT online and ready to use!", succeedColor: 'greenBright' })
-    // botTelegram.sendMessage(chatId, `Bot Connected!`);
-    if (process.env.LOG_TELEGRAM_ENABLE === "TRUE") botTelegram.sendMessage(chatId, `AANNR BOT online and ready to use!`);
+    if (process.env.LOG_TELEGRAM_ENABLE === "TRUE") botTelegram.sendMessage(chatId, `AANNR BOT online and ready to use!\n\nTime Booting: ${elapsedTimeSeconds} second(s)`);
     aboutClient(client)
     console.log("Log messages: \n")
 })
@@ -71,18 +69,27 @@ client.on("message", async (msg) => {
     const chat = await msg.getChat();
     const contact = await msg.getContact();
     console.log(chalk.yellowBright(`💬 ${contact.pushname} : ${msg.body}`));
-    // botTelegram.sendMessage(chatId, `💬 [${contact.number}] - ${contact.pushname}: ${msg.body}`);
     if (process.env.LOG_TELEGRAM_ENABLE === "TRUE") botTelegram.sendMessage(chatId, `💬 [${contact.number}] - ${contact.pushname}: ${msg.body}`);
 
     try {
-        if (msg.body === "!sticker"){
+        if (msg.body.startsWith("!sticker")){
+            const idSticker = await generateID(16);
+            let titleStickerName = idSticker;
             if(msg.hasMedia){
+                if (msg.body[8] === " "){
+                    try {
+                        titleStickerName = msg.body.split(" ")[1].slice(0, 16);
+                    } catch (err) {
+                        msg.reply("Caught Error, check log messages or contact an administrator")
+                        if (process.env.LOG_TELEGRAM_ENABLE === "TRUE") botTelegram.sendMessage(chatId, `Caught Error aa!schedule: ${err}`);
+                        return;
+                    }
+                }
                 const media = await msg.downloadMedia();
-                const idSticker = await generateID(9);
                 chat.sendMessage(media, {
                     sendMediaAsSticker: true,
-                    stickerName: `${contact.pushname}-[${idSticker}]`,
-                    stickerAuthor: "percayajanji-bot",
+                    stickerName: titleStickerName,
+                    stickerAuthor: "44nnr-bot",
                 });
                 msg.reply("_Sticker on process..._")
             } else {
@@ -104,7 +111,7 @@ client.on("message", async (msg) => {
                     console.log(chalk.green(`[*] Downloading video 1 of 1`));
                     console.log(chalk.green(`[*] URL: ${data.url}`));
             
-                    const listVideo = [data]; // Put the data into an array for easier processing
+                    const listVideo = [data];
             
                     downloadMediaFromList(listVideo, chat, msg, contact).then(() => {
                         console.log(chalk.green("[+] Downloaded successfully."));
@@ -118,12 +125,18 @@ client.on("message", async (msg) => {
                     return;
                 }
             }
-        } else if (msg.body.startsWith("aa!schedule ")) {
+        } else if (msg.body.startsWith("aa!schedule")) {
             let chat = await msg.getChat();
             if (chat.isGroup){
-                let scheduleNumber = parseInt(msg.body.split(" ")[1]);
-                if (!scheduleNumber){
-                    scheduleNumber = 1;
+                let scheduleNumber = 1;
+                if (msg.body[11] === " "){
+                    try {
+                        scheduleNumber = parseInt(msg.body.split(" ")[1]);
+                    } catch (err) {
+                        chat.sendMessage("Caught Error, check log messages or contact an administrator")
+                        if (process.env.LOG_TELEGRAM_ENABLE === "TRUE") botTelegram.sendMessage(chatId, `Caught Error aa!schedule: ${err}`);
+                        return;
+                    }
                 }
                 const ctfData = await getCTFScheduleEventData(scheduleNumber);
                 if (ctfData) {
@@ -163,10 +176,15 @@ client.on("message", async (msg) => {
 
             }
 
+        // } else if (msg.body.startsWith("ll")){
+        //     if (msg.body[2] === " "){
+        //         msg.reply("Mengandung spasi");
+        //     } else {
+        //         msg.reply("Tidak mengandung spasi");
+        //     }
         }
     } catch (err) {
         console.log(chalk.red(err))
-        // botTelegram.sendMessage(chatId, `${err}`);
         if (process.env.LOG_TELEGRAM_ENABLE === "TRUE") botTelegram.sendMessage(chatId, `Caught Error: ${err}`);
         return;
     }
