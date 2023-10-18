@@ -8,8 +8,9 @@
 | Command | isGroup? | README |
 | -------- | --- | -------- |
 | !sticker [title] | no | Make images/gif/video turn to sticker. |
-| !tiktok | no | Tiktok downloader no waterwark in there. |
+| !tiktok <link> | no | Tiktok downloader no waterwark in there. |
 | aa!schedule [int] | yes | Check CTF Schedule from CTFTime, smallest [int] means the most upcoming event. |
 | aa!serverinfo | yes | Check CPU/Memory information used to run bot. |
 - isGroup?: Command can only used on group chat.
 - [] = optional, can empty
+- <> = required, can't empty
