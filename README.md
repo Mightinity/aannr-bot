@@ -5,7 +5,7 @@
 
 ## Features
 
-| Command | isGroup? | README |
+| Command | isGroup? | Description |
 | -------- | --- | -------- |
 | !sticker [title] | no | Make images/gif/video turn to sticker. |
 | !tiktok < link > | no | Tiktok downloader no waterwark in there. |
