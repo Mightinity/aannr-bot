@@ -1,10 +1,10 @@
 const { Client, LocalAuth, MessageMedia, } = require('whatsapp-web.js')
-const { getRedirectURL, getIdVideo, getVideoNoWM, downloadMediaFromList } = require('./features/tiktok-function');
-const { aboutClient } = require('./features/whatsapp-function');
-const { generateID, sendTelegramLog } = require('./features/essentials');
+const { getRedirectURL, getIdVideo, getVideoNoWM, downloadMediaFromList } = require('./jsfunction/tiktok-function');
+const { aboutClient } = require('./jsfunction/whatsapp-function');
+const { generateID, sendTelegramLog } = require('./jsfunction/essentials');
 const { DateTime } = require('luxon');
-const { getCTFScheduleEventData, formatDateTime } = require('./features/ctf-function');
-const { getCPUInfo, getUpTime, getMemoryInfo } = require('./features/serverinfo-function');
+const { getCTFScheduleEventData, formatDateTime } = require('./jsfunction/ctf-function');
+const { getCPUInfo, getUpTime, getMemoryInfo, getCPUPercentage } = require('./jsfunction/serverinfo-function');
 const ffmpeg = require('@ffmpeg-installer/ffmpeg');
 const chalk = require("chalk");
 // const puppeteer = require("puppeteer");
@@ -145,8 +145,7 @@ client.on("message", async (msg) => {
                     const startFormatted = formatDateTime(startDateTime, jkt_tz);
                     const finishFormatted = formatDateTime(finishDateTime, jkt_tz);
                     
-                    const gambar = await MessageMedia.fromUrl(logo);
-                    chat.sendMessage(gambar, {
+                    chat.sendMessage((await MessageMedia.fromUrl(logo)), {
                         caption: `${title} by ${organizers[0].name} [ID: ${id}]\n\n*Description*:\n${description}\n\n*CTFTime URL:* ${ctftime_url}\n*Weight:* ${weight}\n*Format:* ${format}\n\n*CTF URL:* ${url}\n*Start:* ${startFormatted}\n*Finish:* ${finishFormatted}\n*Duration:* ${duration.days} day(s) ${duration.hours} hour(s)\n`
                     })
                 }
@@ -164,10 +163,9 @@ client.on("message", async (msg) => {
                 const freeMemory = parseFloat((getMemoryInfo().cache / valuekB).toFixed(2));
                 const usedMemory = parseFloat((totalMemory - (cacheMemory + freeMemory)).toFixed(2));
                 const memoryPercent = parseFloat((((usedMemory + cacheMemory) / totalMemory) * 100).toFixed(1));
+                const cpuPercentage = await getCPUPercentage();
 
-                msg.reply(`*CPU Information*:\n - CPU Name: ${cpuData.name}\n - CPU Core: ${cpuData.cores}\n - CPU Threads: ${cpuData.threads}\n\n*Memory Information:*\n - Memory Total: ${totalMemory} GB\n - Memory Used: ${usedMemory} GB\n - Memory Cache: ${cacheMemory} GB\n - Free Memory: ${freeMemory} GB\n - Memory Usage: ${memoryPercent}%\n\n Uptime: ${upTimeDevice}`)
-                
-
+                msg.reply(`*CPU Information*:\n - CPU Name: ${cpuData.name}\n - CPU Core: ${cpuData.cores}\n - CPU Threads: ${cpuData.threads}\n - CPU Usage: ${cpuPercentage}%\n\n*Memory Information:*\n - Memory Total: ${totalMemory} GB\n - Memory Used: ${usedMemory} GB\n - Memory Cache: ${cacheMemory} GB\n - Free Memory: ${freeMemory} GB\n - Memory Usage: ${memoryPercent}%\n\n Uptime: ${upTimeDevice}`)
             }
         }
     } catch (err) {
